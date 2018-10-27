@@ -1,10 +1,15 @@
 class TasksController < ApplicationController
+  before_action :require_user_logged_in
   before_action :set_task, only: [:show, :edit, :update, :destroy]
+  
   def index
     @tasks =Task.all.page(params[:page])
   end
 
   def show
+    @user = User.find(params[:id])
+    @tasks = @user.tasks.order('created_at DESC').page(params[:page])
+    counts(@user)
   end
 
   def new
@@ -12,14 +17,14 @@ class TasksController < ApplicationController
   end
 
   def create
-    @task = Task.new(task_params)
-
+    @task = current_user.tasks.build(task_params)
     if @task.save
-      flash[:success] = 'Taskが正常に追加されました'
-      redirect_to @task
+      flash[:success] = 'タスクを追加しました。'
+      redirect_to root_url
     else
-      flash.now[:danger] = 'Task が追加されませんでした'
-      render :new
+      @tasks = current_user.tasks.order('created_at DESC').page(params[:page])
+      flash.now[:danger] = 'タスクの追加に失敗しました。'
+      render 'toppages/index'
     end
   end
 
@@ -40,7 +45,7 @@ class TasksController < ApplicationController
     @task.destroy
 
     flash[:success] = 'Task は正常に削除されました'
-    redirect_to tasks_url
+    redirect_back(fallback_location: root_path)
   end
   
   private
