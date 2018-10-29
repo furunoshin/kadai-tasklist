@@ -1,13 +1,16 @@
 class UsersController < ApplicationController
   before_action :require_user_logged_in, only: [:index, :show]
+  
   def index
     @users = User.all.page(params[:page])
   end
 
   def show
     @user = User.find(params[:id])
-    @tasks = @user.tasks.order('created_at DESC').page(params[:page])
-    counts(@user)
+    @tasks = current_user.tasks.find_by(id: params[:id])
+    unless @task
+      redirect_to root_url
+    end
   end
 
   def new
@@ -19,11 +22,15 @@ class UsersController < ApplicationController
 
     if @user.save
       flash[:success] = 'ユーザを登録しました。'
-      redirect_to @user
+      redirect_to root_url
     else
       flash.now[:danger] = 'ユーザの登録に失敗しました。'
       render :new
     end
+  end
+  
+  def edit
+    @user = User.find(params[:id])
   end
 
   private
@@ -31,4 +38,5 @@ class UsersController < ApplicationController
   def user_params
     params.require(:user).permit(:name, :email, :password, :password_confirmation)
   end
+  
 end
