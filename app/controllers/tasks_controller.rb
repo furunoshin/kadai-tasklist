@@ -8,8 +8,6 @@ class TasksController < ApplicationController
   end
 
   def show
-    @tasks = @user.tasks.order('created_at DESC').page(params[:page])
-    counts(@user)
   end
 
   def new
